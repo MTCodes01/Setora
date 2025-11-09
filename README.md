@@ -56,6 +56,7 @@ setora/
 ├── requirements.txt    # Python dependencies
 ├── setora.db           # SQLite database (auto-created)
 ├── .gitignore          # Ignores extra files from git
+├── LICENSE             # GNU GPL v3 License
 └── README.md           # This file
 ```
 
