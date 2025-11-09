@@ -57,6 +57,7 @@ setora/
 ├── setora.db           # SQLite database (auto-created)
 ├── .gitignore          # Ignores extra files from git
 ├── LICENSE             # GNU GPL v3 License
+├── Dockerfile          # Docker File
 └── README.md           # This file
 ```
 

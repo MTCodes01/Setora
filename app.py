@@ -11,12 +11,12 @@ from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = 'setora_secret_key'
-# CORS(app, supports_credentials=True, origins=['http://localhost:5000', 'http://127.0.0.1:5000'])
+# CORS(app, supports_credentials=True, origins=['http://localhost:6000', 'http://127.0.0.1:6000'])
 
 # @app.after_request
 # def after_request(response):
 #     origin = request.headers.get('Origin')
-#     if origin in ['http://localhost:5000', 'http://127.0.0.1:5000']:
+#     if origin in ['http://localhost:6000', 'http://127.0.0.1:6000']:
 #         response.headers.add('Access-Control-Allow-Origin', origin)
 #         response.headers.add('Access-Control-Allow-Credentials', 'true')
 #         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
@@ -575,4 +575,4 @@ def add_template():
     return jsonify({'success': True, 'id': template_id})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=6000)
