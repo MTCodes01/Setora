@@ -365,6 +365,96 @@ def update_user():
     conn.close()
     return jsonify({'success': True})
 
+# custom exercise routes
+@app.route('/api/exercises/custom', methods=['POST'])
+@require_auth
+def add_custom_exercise():
+    """Create a custom exercise for the current user"""
+    data = request.json
+    user_id = request.user['id']
+    
+    # Validation
+    if not data.get('name') or not data.get('category'):
+        return jsonify({'success': False, 'error': 'Name and category are required'}), 400
+    
+    conn = sqlite3.connect('setora.db')
+    c = conn.cursor()
+    
+    try:
+        c.execute('''INSERT INTO user_exercises (user_id, name, category, equipment, image_url)
+                     VALUES (?, ?, ?, ?, ?)''',
+                  (user_id, data['name'], data['category'], 
+                   data.get('equipment', ''), data.get('image_url', '')))
+        exercise_id = c.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True, 
+            'exercise': {
+                'id': exercise_id,
+                'name': data['name'],
+                'category': data['category'],
+                'equipment': data.get('equipment', ''),
+                'image_url': data.get('image_url', ''),
+                'is_custom': True
+            }
+        })
+    except sqlite3.IntegrityError:
+        conn.close()
+        return jsonify({'success': False, 'error': 'You already have an exercise with this name'}), 400
+
+@app.route('/api/exercises/custom/<int:exercise_id>', methods=['DELETE'])
+@require_auth
+def delete_custom_exercise(exercise_id):
+    """Delete a custom exercise"""
+    user_id = request.user['id']
+    
+    conn = sqlite3.connect('setora.db')
+    c = conn.cursor()
+    
+    # Verify ownership
+    c.execute('SELECT id FROM user_exercises WHERE id = ? AND user_id = ?', 
+              (exercise_id, user_id))
+    
+    if not c.fetchone():
+        conn.close()
+        return jsonify({'success': False, 'error': 'Exercise not found'}), 404
+    
+    c.execute('DELETE FROM user_exercises WHERE id = ?', (exercise_id,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
+@app.route('/api/exercises/all', methods=['GET'])
+@require_auth
+def get_all_exercises():
+    """Get built-in exercises + user's custom exercises"""
+    user_id = request.user['id']
+    
+    conn = sqlite3.connect('setora.db')
+    c = conn.cursor()
+    
+    # Built-in exercises
+    c.execute('SELECT id, name, category, equipment FROM exercises ORDER BY category, name')
+    builtin = [{'id': row[0], 'name': row[1], 'category': row[2], 
+                'equipment': row[3], 'is_custom': False} 
+               for row in c.fetchall()]
+    
+    # User's custom exercises
+    c.execute('''SELECT id, name, category, equipment, image_url 
+                 FROM user_exercises 
+                 WHERE user_id = ? 
+                 ORDER BY category, name''', (user_id,))
+    custom = [{'id': f'custom_{row[0]}', 'name': row[1], 'category': row[2], 
+               'equipment': row[3], 'image_url': row[4], 'is_custom': True} 
+              for row in c.fetchall()]
+    
+    conn.close()
+    
+    return jsonify(builtin + custom)
+
 # Exercise routes
 @app.route('/api/exercises', methods=['GET'])
 @require_auth
@@ -398,22 +488,171 @@ def add_exercise():
 @app.route('/api/workouts', methods=['POST'])
 @require_auth
 def add_workout():
+    """Add workout with merge support and rest day handling"""
     data = request.json
     user_id = request.user['id']
+    workout_date = data['date']
     
     conn = sqlite3.connect('setora.db')
     c = conn.cursor()
     
-    c.execute('INSERT INTO workouts (user_id, date, notes) VALUES (?, ?, ?)',
-             (user_id, data['date'], data.get('notes', '')))
-    workout_id = c.lastrowid
+    # Check if workout already exists for this date
+    c.execute('SELECT id FROM workouts WHERE user_id = ? AND date = ?', 
+              (user_id, workout_date))
+    existing = c.fetchone()
     
-    for ex in data['exercises']:
+    if data.get('is_rest_day'):
+        # Handle rest day
+        if existing:
+            # Update existing workout to rest day
+            c.execute('UPDATE workouts SET is_rest_day = 1, notes = ? WHERE id = ?',
+                     (data.get('notes', ''), existing[0]))
+            workout_id = existing[0]
+        else:
+            # Create new rest day workout
+            c.execute('INSERT INTO workouts (user_id, date, notes, is_rest_day) VALUES (?, ?, ?, 1)',
+                     (user_id, workout_date, data.get('notes', '')))
+            workout_id = c.lastrowid
+        
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'workout_id': workout_id, 'merged': bool(existing)})
+    
+    # Regular workout
+    if existing:
+        # MERGE MODE: Add exercises to existing workout
+        workout_id = existing[0]
+        c.execute('UPDATE workouts SET merged_at = ?, is_rest_day = 0 WHERE id = ?',
+                 (datetime.now().isoformat(), workout_id))
+    else:
+        # CREATE MODE: New workout
+        c.execute('INSERT INTO workouts (user_id, date, notes, is_rest_day) VALUES (?, ?, ?, 0)',
+                 (user_id, workout_date, data.get('notes', '')))
+        workout_id = c.lastrowid
+    
+    # Get current max order index for this workout
+    c.execute('SELECT COALESCE(MAX(order_index), 0) FROM workout_exercises WHERE workout_id = ?', 
+              (workout_id,))
+    current_max_order = c.fetchone()[0]
+    
+    # Add exercises
+    for idx, ex in enumerate(data['exercises']):
+        # Determine if custom exercise
+        exercise_id = ex['exercise_id']
+        is_custom = 0
+        
+        if isinstance(exercise_id, str) and exercise_id.startswith('custom_'):
+            is_custom = 1
+            exercise_id = int(exercise_id.replace('custom_', ''))
+        
+        # Insert workout exercise
         c.execute('''INSERT INTO workout_exercises 
-                   (workout_id, exercise_id, sets, reps, weight, duration, notes)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                 (workout_id, ex['exercise_id'], ex.get('sets'), ex.get('reps'),
-                  ex.get('weight'), ex.get('duration'), ex.get('notes', '')))
+                   (workout_id, exercise_id, notes, is_custom, order_index)
+                   VALUES (?, ?, ?, ?, ?)''',
+                 (workout_id, exercise_id, ex.get('notes', ''), 
+                  is_custom, current_max_order + idx + 1))
+        
+        workout_exercise_id = c.lastrowid
+        
+        # Add sets
+        for set_data in ex.get('sets', []):
+            c.execute('''INSERT INTO workout_sets 
+                       (workout_exercise_id, set_number, reps, weight, duration, notes)
+                       VALUES (?, ?, ?, ?, ?, ?)''',
+                     (workout_exercise_id, set_data['set_number'],
+                      set_data.get('reps'), set_data.get('weight'),
+                      set_data.get('duration'), set_data.get('notes', '')))
+    
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'workout_id': workout_id, 'merged': bool(existing)})
+
+@app.route('/api/workouts/<date>', methods=['GET'])
+@require_auth
+def get_workout_by_date(date):
+    """Get workout for a specific date"""
+    user_id = request.user['id']
+    
+    conn = sqlite3.connect('setora.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    c.execute('SELECT * FROM workouts WHERE user_id = ? AND date = ?', 
+              (user_id, date))
+    workout = c.fetchone()
+    
+    if not workout:
+        conn.close()
+        return jsonify({'exists': False})
+    
+    workout_dict = dict(workout)
+    
+    # Get exercises and sets
+    c.execute('''SELECT we.*, e.name, e.category, e.equipment
+                 FROM workout_exercises we
+                 JOIN exercises e ON we.exercise_id = e.id
+                 WHERE we.workout_id = ? AND we.is_custom = 0
+                 ORDER BY we.order_index''', (workout_dict['id'],))
+    
+    exercises = []
+    for ex_row in c.fetchall():
+        ex = dict(ex_row)
+        
+        # Get sets for this exercise
+        c.execute('''SELECT * FROM workout_sets 
+                    WHERE workout_exercise_id = ? 
+                    ORDER BY set_number''', (ex['id'],))
+        ex['sets'] = [dict(s) for s in c.fetchall()]
+        exercises.append(ex)
+    
+    # Get custom exercises
+    c.execute('''SELECT we.*, ue.name, ue.category, ue.equipment, ue.image_url
+                 FROM workout_exercises we
+                 JOIN user_exercises ue ON we.exercise_id = ue.id
+                 WHERE we.workout_id = ? AND we.is_custom = 1
+                 ORDER BY we.order_index''', (workout_dict['id'],))
+    
+    for ex_row in c.fetchall():
+        ex = dict(ex_row)
+        ex['is_custom'] = True
+        
+        c.execute('''SELECT * FROM workout_sets 
+                    WHERE workout_exercise_id = ? 
+                    ORDER BY set_number''', (ex['id'],))
+        ex['sets'] = [dict(s) for s in c.fetchall()]
+        exercises.append(ex)
+    
+    workout_dict['exercises'] = exercises
+    workout_dict['exists'] = True
+    
+    conn.close()
+    return jsonify(workout_dict)
+
+@app.route('/api/workouts/rest', methods=['POST'])
+@require_auth
+def toggle_rest_day():
+    """Mark or unmark a day as rest day"""
+    data = request.json
+    user_id = request.user['id']
+    workout_date = data['date']
+    is_rest = data.get('is_rest_day', True)
+    
+    conn = sqlite3.connect('setora.db')
+    c = conn.cursor()
+    
+    c.execute('SELECT id FROM workouts WHERE user_id = ? AND date = ?', 
+              (user_id, workout_date))
+    existing = c.fetchone()
+    
+    if existing:
+        c.execute('UPDATE workouts SET is_rest_day = ? WHERE id = ?',
+                 (1 if is_rest else 0, existing[0]))
+        workout_id = existing[0]
+    else:
+        c.execute('INSERT INTO workouts (user_id, date, is_rest_day) VALUES (?, ?, ?)',
+                 (user_id, workout_date, 1 if is_rest else 0))
+        workout_id = c.lastrowid
     
     conn.commit()
     conn.close()
@@ -423,6 +662,7 @@ def add_workout():
 @app.route('/api/workouts', methods=['GET'])
 @require_auth
 def get_workouts():
+    """Get workouts with rest day support and new sets structure"""
     user_id = request.user['id']
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -449,27 +689,59 @@ def get_workouts():
     for row in c.fetchall():
         workout = dict(row)
         
-        c.execute('''SELECT we.*, e.name, e.category 
-                    FROM workout_exercises we
-                    JOIN exercises e ON we.exercise_id = e.id
-                    WHERE we.workout_id = ?''', (workout['id'],))
-        
-        exercises = []
-        categories = set()
-        
-        for ex_row in c.fetchall():
-            ex = dict(ex_row)
-            exercises.append(ex)
-            categories.add(ex['category'])
-        
-        workout['exercises'] = exercises
-        
-        if len(categories) == 1:
-            workout['day_type'] = f"{list(categories)[0]} Day"
-        elif len(categories) > 1:
-            workout['day_type'] = " + ".join(sorted(categories)) + " Day"
+        if workout['is_rest_day']:
+            workout['day_type'] = 'Rest Day'
+            workout['exercises'] = []
         else:
-            workout['day_type'] = "Workout Day"
+            # Get built-in exercises
+            c.execute('''SELECT we.*, e.name, e.category 
+                        FROM workout_exercises we
+                        JOIN exercises e ON we.exercise_id = e.id
+                        WHERE we.workout_id = ? AND we.is_custom = 0
+                        ORDER BY we.order_index''', (workout['id'],))
+            
+            exercises = []
+            categories = set()
+            
+            for ex_row in c.fetchall():
+                ex = dict(ex_row)
+                
+                # Get sets
+                c.execute('''SELECT * FROM workout_sets 
+                            WHERE workout_exercise_id = ? 
+                            ORDER BY set_number''', (ex['id'],))
+                ex['sets'] = [dict(s) for s in c.fetchall()]
+                
+                exercises.append(ex)
+                categories.add(ex['category'])
+            
+            # Get custom exercises
+            c.execute('''SELECT we.*, ue.name, ue.category 
+                        FROM workout_exercises we
+                        JOIN user_exercises ue ON we.exercise_id = ue.id
+                        WHERE we.workout_id = ? AND we.is_custom = 1
+                        ORDER BY we.order_index''', (workout['id'],))
+            
+            for ex_row in c.fetchall():
+                ex = dict(ex_row)
+                ex['is_custom'] = True
+                
+                c.execute('''SELECT * FROM workout_sets 
+                            WHERE workout_exercise_id = ? 
+                            ORDER BY set_number''', (ex['id'],))
+                ex['sets'] = [dict(s) for s in c.fetchall()]
+                
+                exercises.append(ex)
+                categories.add(ex['category'])
+            
+            workout['exercises'] = exercises
+            
+            if len(categories) == 1:
+                workout['day_type'] = f"{list(categories)[0]} Day"
+            elif len(categories) > 1:
+                workout['day_type'] = " + ".join(sorted(categories)) + " Day"
+            else:
+                workout['day_type'] = "Workout Day"
         
         workouts.append(workout)
     
@@ -511,30 +783,37 @@ def get_weight_logs():
 @app.route('/api/progress', methods=['GET'])
 @require_auth
 def get_progress():
+    """Get progress stats with rest day awareness"""
     user_id = request.user['id']
     
     conn = sqlite3.connect('setora.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     
+    # Volume stats (exclude rest days)
     c.execute('''SELECT w.date, e.category, 
-                 SUM(we.sets * we.reps * we.weight) as volume,
-                 COUNT(we.id) as exercise_count
+                 SUM(ws.weight * ws.reps) as volume,
+                 COUNT(DISTINCT we.id) as exercise_count
                  FROM workouts w
                  JOIN workout_exercises we ON w.id = we.workout_id
-                 JOIN exercises e ON we.exercise_id = e.id
-                 WHERE w.user_id = ?
-                 GROUP BY w.date, e.category
+                 LEFT JOIN exercises e ON we.exercise_id = e.id AND we.is_custom = 0
+                 LEFT JOIN user_exercises ue ON we.exercise_id = ue.id AND we.is_custom = 1
+                 LEFT JOIN workout_sets ws ON we.id = ws.workout_exercise_id
+                 WHERE w.user_id = ? AND w.is_rest_day = 0
+                 GROUP BY w.date, COALESCE(e.category, ue.category)
                  ORDER BY w.date''', (user_id,))
     
     workout_stats = [dict(row) for row in c.fetchall()]
     
-    c.execute('''SELECT e.category, COUNT(DISTINCT w.date) as frequency
+    # Category frequency (exclude rest days)
+    c.execute('''SELECT COALESCE(e.category, ue.category) as category, 
+                 COUNT(DISTINCT w.date) as frequency
                  FROM workouts w
                  JOIN workout_exercises we ON w.id = we.workout_id
-                 JOIN exercises e ON we.exercise_id = e.id
-                 WHERE w.user_id = ?
-                 GROUP BY e.category''', (user_id,))
+                 LEFT JOIN exercises e ON we.exercise_id = e.id AND we.is_custom = 0
+                 LEFT JOIN user_exercises ue ON we.exercise_id = ue.id AND we.is_custom = 1
+                 WHERE w.user_id = ? AND w.is_rest_day = 0
+                 GROUP BY COALESCE(e.category, ue.category)''', (user_id,))
     
     category_freq = [dict(row) for row in c.fetchall()]
     
@@ -575,4 +854,4 @@ def add_template():
     return jsonify({'success': True, 'id': template_id})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=6000)
+    app.run(debug=True, port=5000)

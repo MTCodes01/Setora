@@ -505,6 +505,386 @@
         .hidden {
             display: none !important;
         }
+
+        /* Rest Day Toggle */
+        .rest-day-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .rest-day-toggle:hover {
+            background: var(--border);
+        }
+
+        .rest-day-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .rest-day-mode {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .rest-day-mode h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Exercise Selection Modal */
+        .exercise-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            overflow-y: auto;
+        }
+
+        .exercise-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .exercise-modal-content {
+            background: var(--card);
+            border-radius: 12px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .exercise-modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .exercise-search {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg);
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .exercise-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .filter-pill {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .filter-pill:hover {
+            background: var(--bg);
+        }
+
+        .filter-pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .custom-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .exercise-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.5rem;
+        }
+
+        .exercise-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .exercise-list-item:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+        }
+
+        .exercise-list-item.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .exercise-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .exercise-icon {
+            font-size: 1.5rem;
+        }
+
+        .exercise-info {
+            flex: 1;
+        }
+
+        .exercise-info-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .exercise-info-details {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .exercise-list-item.selected .exercise-info-details {
+            opacity: 1;
+        }
+
+        .exercise-modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+
+        /* Create Custom Exercise Form */
+        .custom-exercise-form {
+            display: none;
+            padding: 1.5rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .custom-exercise-form.active {
+            display: block;
+        }
+
+        /* Selected Exercises Display */
+        .selected-exercises-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .exercise-card {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .exercise-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            cursor: pointer;
+        }
+
+        .exercise-card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .exercise-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .exercise-card-body {
+            padding: 1rem;
+        }
+
+        /* Dynamic Sets Editor */
+        .sets-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .set-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.5rem;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .set-number {
+            font-weight: 600;
+            color: var(--text-light);
+            min-width: 50px;
+        }
+
+        .set-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .set-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .set-input-group label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .set-input-group input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .set-input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .remove-set-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-set-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+
+        .add-set-btn:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Rest Day Badge in Calendar */
+        .calendar-day.rest-day {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border-color: #8b5cf6;
+        }
+
+        /* Merge Indicator */
+        .merge-indicator {
+            background: #f59e0b;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .set-row {
+                grid-template-columns: 1fr;
+            }
+
+            .set-number {
+                text-align: left;
+            }
+
+            .exercise-modal-content {
+                max-height: 95vh;
+            }
+
+            .exercise-filters {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -616,29 +996,150 @@
             <!-- Add Workout Page -->
             <div id="add-workout" class="page">
                 <h1 style="margin-bottom: 1.5rem;">Add Workout</h1>
-                
+
                 <div class="card">
                     <div id="success-msg" class="success-message"></div>
-                    
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="workout-date" class="form-control">
+                    <div id="merge-indicator" class="merge-indicator" style="display: none;">
+                        ⚡ Adding exercises to existing workout for this date
                     </div>
 
-                    <div class="form-group">
-                        <label>Exercises</label>
-                        <div id="exercises-list"></div>
-                        <button class="btn btn-outline" onclick="addExerciseEntry()" style="margin-top: 1rem;">+ Add Exercise</button>
-                    </div>
+                    <!-- Date & Rest Day Toggle (improved layout) -->
+                    <div class="grid grid-2" style="align-items: center; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="workout-date">Date</label>
+                            <input type="date" id="workout-date" class="form-control"
+                                   onchange="checkExistingWorkout()" aria-label="Workout date">
+                            <div style="color:var(--text-light); font-size:0.875rem; margin-top:0.5rem;">
+                                Select the date for this entry
+                            </div>
+                        </div>
 
+                        <div class="form-group" style="display:flex; flex-direction:column; justify-content:center;">
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+
+                                <label class="rest-day-toggle" style="margin:0; padding:10px; display:flex; align-items:center; justify-content:center;">
+                                    <input type="checkbox" id="rest-day-toggle" onchange="toggleRestDayMode()" aria-label="Mark as rest day" style="margin-right:0.5rem;">
+                                    <span>Mark as Rest Day</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Rest Day Mode -->
+                    <div id="rest-day-mode" class="rest-day-mode" style="display: none;">
+                        <h3>🛌 Rest Day</h3>
+                        <p>Recovery is just as important as training!</p>
+                    </div>
+                
+                    <!-- Workout Mode -->
+                    <div id="workout-mode">
+                        <!-- Selected Exercises -->
+                        <div class="form-group">
+                            <label>Exercises</label>
+                            <div id="selected-exercises" class="selected-exercises-container">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">💪</div>
+                                    <p>No exercises added yet</p>
+                                    <p style="font-size: 0.875rem;">Click "Add Exercises" to get started</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline btn-full" onclick="openExerciseModal()">
+                                + Add Exercises
+                            </button>
+                        </div>
+                    </div>
+                
+                    <!-- Notes (shown for both modes) -->
                     <div class="form-group">
                         <label>Notes (Optional)</label>
-                        <textarea id="workout-notes" class="form-control" rows="3" placeholder="How did it feel? Any notes..."></textarea>
+                        <textarea id="workout-notes" class="form-control" rows="3" 
+                                  placeholder="How did you feel? Any observations..."></textarea>
+                    </div>
+                
+                    <!-- Actions -->
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="saveWorkout()">
+                            <span id="save-btn-text">Save Workout</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="saveAsTemplate()" id="template-btn">
+                            Save as Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise Selection Modal -->
+            <div id="exercise-modal" class="exercise-modal">
+                <div class="exercise-modal-content">
+                    <div class="exercise-modal-header">
+                        <h2 style="margin-bottom: 1rem;">Add Exercises</h2>
+
+                        <input type="text" class="exercise-search" id="exercise-search" 
+                               placeholder="🔍 Search exercises..." oninput="filterExercises()">
+
+                        <div class="exercise-filters" id="exercise-filters">
+                            <button class="filter-pill active" data-category="all" onclick="filterByCategory('all')">All</button>
+                            <button class="filter-pill" data-category="Chest" onclick="filterByCategory('Chest')">Chest</button>
+                            <button class="filter-pill" data-category="Back" onclick="filterByCategory('Back')">Back</button>
+                            <button class="filter-pill" data-category="Legs" onclick="filterByCategory('Legs')">Legs</button>
+                            <button class="filter-pill" data-category="Arms" onclick="filterByCategory('Arms')">Arms</button>
+                            <button class="filter-pill" data-category="Shoulders" onclick="filterByCategory('Shoulders')">Shoulders</button>
+                            <button class="filter-pill" data-category="Core" onclick="filterByCategory('Core')">Core</button>
+                            <button class="filter-pill" data-category="Cardio" onclick="filterByCategory('Cardio')">Cardio</button>
+                        </div>
+
+                        <div class="custom-toggle">
+                            <input type="checkbox" id="custom-only-toggle" onchange="filterExercises()">
+                            <label for="custom-only-toggle">Show My Custom Only</label>
+                        </div>
                     </div>
 
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn btn-primary" onclick="saveWorkout()">Save Workout</button>
-                        <button class="btn btn-outline" onclick="saveAsTemplate()">Save as Template</button>
+                    <!-- Custom Exercise Form -->
+                    <div id="custom-exercise-form" class="custom-exercise-form">
+                        <h3 style="margin-bottom: 1rem;">Create Custom Exercise</h3>
+                        <div class="form-group">
+                            <label>Exercise Name</label>
+                            <input type="text" id="custom-name" class="form-control" placeholder="e.g., Cable Flyes">
+                        </div>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="custom-category" class="form-control">
+                                    <option value="Chest">Chest</option>
+                                    <option value="Back">Back</option>
+                                    <option value="Legs">Legs</option>
+                                    <option value="Arms">Arms</option>
+                                    <option value="Shoulders">Shoulders</option>
+                                    <option value="Core">Core</option>
+                                    <option value="Cardio">Cardio</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Equipment (Optional)</label>
+                                <input type="text" id="custom-equipment" class="form-control" placeholder="e.g., Cable">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Image URL (Optional)</label>
+                            <input type="text" id="custom-image" class="form-control" placeholder="https://...">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline" onclick="cancelCustomExercise()">Cancel</button>
+                            <button class="btn btn-primary" onclick="createCustomExercise()">Create & Add</button>
+                        </div>
+                    </div>
+
+                    <div class="exercise-modal-body" id="exercise-list">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <div class="exercise-modal-footer">
+                        <button class="btn btn-outline" onclick="showCustomExerciseForm()">
+                            + Create Custom Exercise
+                        </button>
+                        <button class="btn btn-primary" onclick="addSelectedExercises()" id="add-selected-btn">
+                            Add Selected (0)
+                        </button>
                     </div>
                 </div>
             </div>
@@ -768,12 +1269,22 @@
         let currentMonth = new Date();
         let exerciseCounter = 0;
         let currentUser = null;
+        let allExercisesData = []; // Built-in + custom exercises
+        let selectedExercises = []; // Currently selected exercises in modal
+        let addedExercises = []; // Exercises added to workout
+        let currentFilter = 'all';
+        let existingWorkoutDate = null;
 
         // Theme Management
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcon(savedTheme);
+        }
+
+        async function loadAllExercises() {
+            allExercisesData = await apiCall('/exercises/all');
+            console.log('Loaded exercises:', allExercisesData);
         }
 
         function toggleTheme() {
@@ -786,6 +1297,27 @@
             // Save to user profile if logged in
             if (currentUser) {
                 apiCall('/user', 'PUT', {...currentUser, theme_preference: newTheme});
+            }
+        }
+
+        function toggleRestDayMode() {
+            const isRestDay = document.getElementById('rest-day-toggle').checked;
+            const restDayMode = document.getElementById('rest-day-mode');
+            const workoutMode = document.getElementById('workout-mode');
+            const templateBtn = document.getElementById('template-btn');
+            const saveBtnText = document.getElementById('save-btn-text');
+
+            if (isRestDay) {
+                restDayMode.style.display = 'block';
+                workoutMode.style.display = 'none';
+                templateBtn.style.display = 'none';
+                saveBtnText.textContent = 'Save Rest Day';
+                addedExercises = [];
+            } else {
+                restDayMode.style.display = 'none';
+                workoutMode.style.display = 'block';
+                templateBtn.style.display = 'inline-block';
+                saveBtnText.textContent = 'Save Workout';
             }
         }
 
@@ -824,6 +1356,10 @@
                     setupNavigation();
                     document.getElementById('workout-date').valueAsDate = new Date();
                     document.getElementById('weight-date').valueAsDate = new Date();
+
+                    if (currentUser) {
+                        await loadAllExercises();
+                    }
                 } else {
                     showAuth();
                 }
@@ -964,6 +1500,7 @@
             
             if (page === 'calendar') loadCalendar();
             if (page === 'progress') loadProgress();
+            if (page === 'profile') loadProfile();
         }
 
         // API Calls
@@ -995,24 +1532,25 @@
 
         async function loadDashboard() {
             workoutsData = await apiCall('/workouts');
-            
+
             if (!workoutsData) return;
-            
-            // Stats
-            document.getElementById('total-workouts').textContent = workoutsData.length;
-            
-            const today = new Date().toISOString().split('T')[0];
+
+            // Total workouts (exclude rest days)
+            const actualWorkouts = workoutsData.filter(w => !w.is_rest_day);
+            document.getElementById('total-workouts').textContent = actualWorkouts.length;
+
+            // This week (exclude rest days)
             const thisWeekStart = new Date();
             thisWeekStart.setDate(thisWeekStart.getDate() - 7);
-            
-            const thisWeek = workoutsData.filter(w => new Date(w.date) >= thisWeekStart).length;
+            const thisWeek = actualWorkouts.filter(w => new Date(w.date) >= thisWeekStart).length;
             document.getElementById('this-week').textContent = thisWeek;
-            
-            // Streak
+
+            // Streak (exclude rest days)
             let streak = 0;
-            const sortedDates = [...new Set(workoutsData.map(w => w.date))].sort().reverse();
+            const workoutDates = [...new Set(actualWorkouts.map(w => w.date))].sort().reverse();
             let checkDate = new Date();
-            for (let date of sortedDates) {
+
+            for (let date of workoutDates) {
                 const workoutDate = new Date(date);
                 const diff = Math.floor((checkDate - workoutDate) / (1000 * 60 * 60 * 24));
                 if (diff <= 1) {
@@ -1023,13 +1561,26 @@
                 }
             }
             document.getElementById('current-streak').textContent = streak;
-            
+
             // Today's workout
+            const today = new Date().toISOString().split('T')[0];
             const todayWorkout = workoutsData.find(w => w.date === today);
             if (todayWorkout) {
-                displayTodayWorkout(todayWorkout);
+                if (todayWorkout.is_rest_day) {
+                    document.getElementById('today-workout').innerHTML = `
+                        <div class="exercise-item">
+                            <div class="exercise-details">
+                                <div class="exercise-name">Rest Day</div>
+                                <div class="exercise-stats">Recovery day</div>
+                            </div>
+                            <span class="category-badge" style="background: #8b5cf6;">Rest</span>
+                        </div>
+                    `;
+                } else {
+                    displayTodayWorkout(todayWorkout);
+                }
             }
-            
+
             // Recent workouts
             displayRecentWorkouts(workoutsData.slice(0, 5));
         }
@@ -1049,20 +1600,31 @@
 
         function displayRecentWorkouts(workouts) {
             if (!workouts || workouts.length === 0) {
-                document.getElementById('recent-workouts').innerHTML = '<p class="loading">No workouts yet. Start tracking!</p>';
+                document.getElementById('recent-workouts').innerHTML = 
+                    '<p class="loading">No workouts yet. Start tracking!</p>';
                 return;
             }
-            
-            const html = workouts.map(w => `
-                <div class="exercise-item" onclick="showWorkoutDetails('${w.date}')">
-                    <div class="exercise-details">
-                        <div class="exercise-name">${new Date(w.date).toLocaleDateString()}</div>
-                        <div class="exercise-stats">${w.day_type} • ${w.exercises.length} exercises</div>
+
+            const html = workouts.map(w => {
+                const badge = w.is_rest_day ? 
+                    '<span class="category-badge" style="background: #8b5cf6;">Rest</span>' :
+                    `<span class="category-badge">${w.day_type}</span>`;
+
+                const details = w.is_rest_day ?
+                    'Recovery day' :
+                    `${w.day_type} • ${w.exercises.length} exercises`;
+
+                return `
+                    <div class="exercise-item" onclick="showWorkoutDetails('${w.date}')">
+                        <div class="exercise-details">
+                            <div class="exercise-name">${new Date(w.date).toLocaleDateString()}</div>
+                            <div class="exercise-stats">${details}</div>
+                        </div>
+                        ${badge}
                     </div>
-                    <span class="category-badge">${w.day_type}</span>
-                </div>
-            `).join('');
-            
+                `;
+            }).join('');
+
             document.getElementById('recent-workouts').innerHTML = html;
         }
 
@@ -1159,6 +1721,161 @@
             }
         }
 
+        async function checkExistingWorkout() {
+            const date = document.getElementById('workout-date').value;
+            if (!date) return;
+
+            const workout = await apiCall(`/workouts/${date}`);
+            const mergeIndicator = document.getElementById('merge-indicator');
+
+            if (workout && workout.exists) {
+                existingWorkoutDate = date;
+                mergeIndicator.style.display = 'flex';
+
+                // If it's a rest day, check the toggle
+                if (workout.is_rest_day) {
+                    document.getElementById('rest-day-toggle').checked = true;
+                    toggleRestDayMode();
+                } else {
+                    // Load existing exercises
+                    addedExercises = workout.exercises.map(ex => ({
+                        id: ex.is_custom ? `custom_${ex.exercise_id}` : ex.exercise_id,
+                        name: ex.name,
+                        category: ex.category,
+                        equipment: ex.equipment,
+                        is_custom: ex.is_custom,
+                        sets: ex.sets || []
+                    }));
+                    renderAddedExercises();
+                }
+
+                // Load notes
+                document.getElementById('workout-notes').value = workout.notes || '';
+            } else {
+                existingWorkoutDate = null;
+                mergeIndicator.style.display = 'none';
+            }
+        }
+
+        function openExerciseModal() {
+            document.getElementById('exercise-modal').classList.add('active');
+            selectedExercises = [];
+            renderExerciseList();
+            updateSelectedCount();
+        }
+
+        function closeExerciseModal() {
+            document.getElementById('exercise-modal').classList.remove('active');
+            document.getElementById('custom-exercise-form').classList.remove('active');
+            selectedExercises = [];
+        }
+
+        function filterByCategory(category) {
+            currentFilter = category;
+
+            // Update active pill
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+                if (pill.dataset.category === category) {
+                    pill.classList.add('active');
+                }
+            });
+
+            renderExerciseList();
+        }
+
+        function filterExercises() {
+            renderExerciseList();
+        }
+
+        function renderExerciseList() {
+            const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
+            const customOnly = document.getElementById('custom-only-toggle').checked;
+
+            let filtered = allExercisesData.filter(ex => {
+                const matchesSearch = ex.name.toLowerCase().includes(searchTerm);
+                const matchesCategory = currentFilter === 'all' || ex.category === currentFilter;
+                const matchesCustom = !customOnly || ex.is_custom;
+                return matchesSearch && matchesCategory && matchesCustom;
+            });
+
+            const html = filtered.map(ex => {
+                const isSelected = selectedExercises.includes(ex.id);
+                const icon = getCategoryIcon(ex.category);
+
+                return `
+                    <div class="exercise-list-item ${isSelected ? 'selected' : ''}" 
+                         onclick="toggleExerciseSelection('${ex.id}')">
+                        <input type="checkbox" class="exercise-checkbox" 
+                               ${isSelected ? 'checked' : ''} onclick="event.stopPropagation()">
+                        <div class="exercise-icon">${icon}</div>
+                        <div class="exercise-info">
+                            <div class="exercise-info-name">
+                                ${ex.name} ${ex.is_custom ? '⭐' : ''}
+                            </div>
+                            <div class="exercise-info-details">
+                                ${ex.category} • ${ex.equipment || 'No equipment'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('exercise-list').innerHTML = html || 
+                '<p class="loading">No exercises found</p>';
+        }
+
+        function toggleExerciseSelection(exerciseId) {
+            const index = selectedExercises.indexOf(exerciseId);
+            if (index > -1) {
+                selectedExercises.splice(index, 1);
+            } else {
+                selectedExercises.push(exerciseId);
+            }
+            renderExerciseList();
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const btn = document.getElementById('add-selected-btn');
+            btn.textContent = `Add Selected (${selectedExercises.length})`;
+            btn.disabled = selectedExercises.length === 0;
+        }
+
+        function addSelectedExercises() {
+            selectedExercises.forEach(exerciseId => {
+                const exercise = allExercisesData.find(ex => ex.id === exerciseId);
+                if (exercise && !addedExercises.find(e => e.id === exerciseId)) {
+                    addedExercises.push({
+                        id: exercise.id,
+                        name: exercise.name,
+                        category: exercise.category,
+                        equipment: exercise.equipment,
+                        is_custom: exercise.is_custom,
+                        sets: [{set_number: 1, reps: null, weight: null, duration: null, notes: ''}]
+                    });
+                }
+            });
+
+            renderAddedExercises();
+            closeExerciseModal();
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'Chest': '💪',
+                'Back': '🏋️',
+                'Legs': '🦵',
+                'Arms': '💪',
+                'Shoulders': '🤸',
+                'Core': '🧘',
+                'Cardio': '🏃',
+                'Biceps': '💪',
+                'Triceps': '💪'
+            };
+            return icons[category] || '💪';
+        }
+
         function showSuccess(message) {
             const el = document.getElementById('success-msg');
             el.textContent = message;
@@ -1170,33 +1887,38 @@
         async function loadCalendar() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth();
-            
+
             document.getElementById('calendar-month').textContent = 
                 currentMonth.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
-            
+
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
+
             let html = '';
             ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
                 html += `<div style="text-align:center;font-weight:600;padding:0.5rem;">${day}</div>`;
             });
-            
+
             for (let i = 0; i < firstDay; i++) {
                 html += '<div class="calendar-day" style="opacity:0.3;"></div>';
             }
-            
+
             const today = new Date().toISOString().split('T')[0];
-            
+
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const hasWorkout = workoutsData.some(w => w.date === dateStr);
+                const workout = workoutsData.find(w => w.date === dateStr);
                 const isToday = dateStr === today;
-                
-                html += `<div class="calendar-day ${hasWorkout ? 'has-workout' : ''} ${isToday ? 'today' : ''}" 
-                         onclick="showWorkoutDetails('${dateStr}')">${day}</div>`;
+
+                let classes = 'calendar-day';
+                if (workout) {
+                    classes += workout.is_rest_day ? ' rest-day' : ' has-workout';
+                }
+                if (isToday) classes += ' today';
+
+                html += `<div class="${classes}" onclick="showWorkoutDetails('${dateStr}')">${day}</div>`;
             }
-            
+
             document.getElementById('calendar-grid').innerHTML = html;
         }
 
@@ -1205,41 +1927,298 @@
             loadCalendar();
         }
 
+        function showCustomExerciseForm() {
+            document.getElementById('custom-exercise-form').classList.add('active');
+        }
+
+        function cancelCustomExercise() {
+            document.getElementById('custom-exercise-form').classList.remove('active');
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-equipment').value = '';
+            document.getElementById('custom-image').value = '';
+        }
+
+        async function createCustomExercise() {
+            const name = document.getElementById('custom-name').value.trim();
+            const category = document.getElementById('custom-category').value;
+            const equipment = document.getElementById('custom-equipment').value.trim();
+            const image_url = document.getElementById('custom-image').value.trim();
+
+            if (!name) {
+                alert('Please enter an exercise name');
+                return;
+            }
+
+            const result = await apiCall('/exercises/custom', 'POST', {
+                name, category, equipment, image_url
+            });
+
+            if (result && result.success) {
+                // Add to exercises list
+                allExercisesData.push(result.exercise);
+
+                // Auto-select the new exercise
+                selectedExercises.push(result.exercise.id);
+
+                // Reset form
+                cancelCustomExercise();
+
+                // Refresh list
+                renderExerciseList();
+                updateSelectedCount();
+
+                showSuccess('Custom exercise created!');
+            } else {
+                alert(result.error || 'Failed to create exercise');
+            }
+        }
+
         function showWorkoutDetails(date) {
             const workout = workoutsData.find(w => w.date === date);
-            
+
             if (!workout) {
                 document.getElementById('modal-date').textContent = new Date(date).toLocaleDateString();
                 document.getElementById('modal-body').innerHTML = '<p>No workout logged for this day.</p>';
+            } else if (workout.is_rest_day) {
+                document.getElementById('modal-date').textContent = 
+                    `${new Date(date).toLocaleDateString()} - Rest Day`;
+                document.getElementById('modal-body').innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🛌</div>
+                        <h3>Rest Day</h3>
+                        <p style="color: var(--text-light);">Recovery day</p>
+                        ${workout.notes ? `<p style="margin-top: 1rem;"><strong>Notes:</strong> ${workout.notes}</p>` : ''}
+                    </div>
+                `;
             } else {
                 document.getElementById('modal-date').textContent = 
                     `${new Date(date).toLocaleDateString()} - ${workout.day_type}`;
-                
-                const exercisesHtml = workout.exercises.map(ex => `
-                    <div class="exercise-item">
-                        <div class="exercise-details">
-                            <div class="exercise-name">${ex.name}</div>
-                            <div class="exercise-stats">
-                                ${ex.sets ? `${ex.sets} sets` : ''} 
-                                ${ex.reps ? `× ${ex.reps} reps` : ''} 
-                                ${ex.weight ? `× ${ex.weight}kg` : ''}
-                                ${ex.duration ? `${ex.duration} min` : ''}
-                                ${ex.notes ? `<br><i>${ex.notes}</i>` : ''}
+
+                const exercisesHtml = workout.exercises.map(ex => {
+                    const setsHtml = ex.sets.map(set => {
+                        const parts = [];
+                        if (set.reps) parts.push(`${set.reps} reps`);
+                        if (set.weight) parts.push(`${set.weight}kg`);
+                        if (set.duration) parts.push(`${set.duration} min`);
+                        return `<li>${parts.join(' × ')}${set.notes ? ` - ${set.notes}` : ''}</li>`;
+                    }).join('');
+
+                    return `
+                        <div class="exercise-item">
+                            <div class="exercise-details">
+                                <div class="exercise-name">${ex.name}</div>
+                                <div class="exercise-stats">
+                                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                        ${setsHtml}
+                                    </ul>
+                                    ${ex.notes ? `<i style="display: block; margin-top: 0.5rem;">${ex.notes}</i>` : ''}
+                                </div>
                             </div>
+                            <span class="category-badge">${ex.category}</span>
                         </div>
-                        <span class="category-badge">${ex.category}</span>
-                    </div>
-                `).join('');
-                
+                    `;
+                }).join('');
+
                 document.getElementById('modal-body').innerHTML = exercisesHtml + 
                     (workout.notes ? `<p style="margin-top:1rem;"><strong>Notes:</strong> ${workout.notes}</p>` : '');
             }
-            
+
             document.getElementById('workout-modal').classList.add('active');
         }
 
         function closeModal() {
             document.getElementById('workout-modal').classList.remove('active');
+        }
+
+        function renderAddedExercises() {
+            const container = document.getElementById('selected-exercises');
+
+            if (addedExercises.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💪</div>
+                        <p>No exercises added yet</p>
+                        <p style="font-size: 0.875rem;">Click "Add Exercises" to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = addedExercises.map((ex, exIndex) => `
+                <div class="exercise-card" data-exercise-index="${exIndex}">
+                    <div class="exercise-card-header">
+                        <div class="exercise-card-title">
+                            <span>${getCategoryIcon(ex.category)}</span>
+                            <span>${ex.name}</span>
+                            <span class="category-badge">${ex.category}</span>
+                        </div>
+                        <div class="exercise-card-actions">
+                            <button class="btn btn-danger" onclick="removeExercise(${exIndex})" 
+                                    style="padding: 0.5rem 1rem;">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="exercise-card-body">
+                        <div class="sets-container">
+                            ${ex.sets.map((set, setIndex) => renderSetRow(exIndex, setIndex, set)).join('')}
+                        </div>
+                        <button class="add-set-btn" onclick="addSet(${exIndex})">
+                            + Add Set
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        function renderSetRow(exIndex, setIndex, set) {
+            return `
+                <div class="set-row" data-set-index="${setIndex}">
+                    <div class="set-number">Set ${set.set_number}</div>
+                    <div class="set-inputs">
+                        <div class="set-input-group">
+                            <label>Reps</label>
+                            <input type="number" value="${set.reps || ''}" 
+                                   onchange="updateSet(${exIndex}, ${setIndex}, 'reps', this.value)"
+                                   placeholder="12">
+                        </div>
+                        <div class="set-input-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.5" value="${set.weight || ''}" 
+                                   onchange="updateSet(${exIndex}, ${setIndex}, 'weight', this.value)"
+                                   placeholder="60">
+                        </div>
+                        <div class="set-input-group">
+                            <label>Duration (min)</label>
+                            <input type="number" step="0.1" value="${set.duration || ''}" 
+                                   onchange="updateSet(${exIndex}, ${setIndex}, 'duration', this.value)"
+                                   placeholder="5">
+                        </div>
+                        <div class="set-input-group">
+                            <label>Notes</label>
+                            <input type="text" value="${set.notes || ''}" 
+                                   onchange="updateSet(${exIndex}, ${setIndex}, 'notes', this.value)"
+                                   placeholder="Optional">
+                        </div>
+                    </div>
+                    <button class="remove-set-btn" onclick="removeSet(${exIndex}, ${setIndex})">
+                        ✕
+                    </button>
+                </div>
+            `;
+        }
+
+        function addSet(exIndex) {
+            const exercise = addedExercises[exIndex];
+            const newSetNumber = exercise.sets.length + 1;
+            exercise.sets.push({
+                set_number: newSetNumber,
+                reps: null,
+                weight: null,
+                duration: null,
+                notes: ''
+            });
+            renderAddedExercises();
+        }
+
+        function removeSet(exIndex, setIndex) {
+            const exercise = addedExercises[exIndex];
+            exercise.sets.splice(setIndex, 1);
+
+            // Renumber remaining sets
+            exercise.sets.forEach((set, idx) => {
+                set.set_number = idx + 1;
+            });
+
+            renderAddedExercises();
+        }
+
+        function updateSet(exIndex, setIndex, field, value) {
+            const exercise = addedExercises[exIndex];
+            const set = exercise.sets[setIndex];
+
+            if (field === 'notes') {
+                set[field] = value;
+            } else {
+                set[field] = value ? parseFloat(value) : null;
+            }
+        }
+
+        function removeExercise(exIndex) {
+            if (confirm('Remove this exercise?')) {
+                addedExercises.splice(exIndex, 1);
+                renderAddedExercises();
+            }
+        }
+
+        async function saveWorkout() {
+            const date = document.getElementById('workout-date').value;
+            const notes = document.getElementById('workout-notes').value;
+            const isRestDay = document.getElementById('rest-day-toggle').checked;
+
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+
+            if (isRestDay) {
+                // Save rest day
+                const result = await apiCall('/workouts', 'POST', {
+                    date,
+                    notes,
+                    is_rest_day: true,
+                    exercises: []
+                });
+
+                if (result && result.success) {
+                    showSuccess(result.merged ? 'Rest day updated!' : 'Rest day saved!');
+                    resetWorkoutForm();
+                    await loadDashboard();
+                }
+                return;
+            }
+
+            if (addedExercises.length === 0) {
+                alert('Please add at least one exercise');
+                return;
+            }
+
+            // Prepare exercises data
+            const exercises = addedExercises.map(ex => ({
+                exercise_id: ex.id,
+                notes: '',
+                sets: ex.sets.filter(set => 
+                    set.reps !== null || set.weight !== null || set.duration !== null
+                )
+            }));
+
+            const result = await apiCall('/workouts', 'POST', {
+                date,
+                notes,
+                is_rest_day: false,
+                exercises
+            });
+
+            if (result && result.success) {
+                const message = result.merged ? 
+                    'Exercises added to existing workout!' : 
+                    'Workout saved successfully!';
+                showSuccess(message);
+                resetWorkoutForm();
+                await loadDashboard();
+            }
+        }
+
+        function resetWorkoutForm() {
+            addedExercises = [];
+            existingWorkoutDate = null;
+            document.getElementById('workout-notes').value = '';
+            document.getElementById('rest-day-toggle').checked = false;
+            document.getElementById('merge-indicator').style.display = 'none';
+            toggleRestDayMode();
+            renderAddedExercises();
         }
 
         // Progress Charts
@@ -1331,6 +2310,19 @@
             });
         }
 
+        async function loadProfile() {
+            const profile = await apiCall('/user');
+            if (!profile) return;
+
+            document.getElementById('profile-name').value = profile.name || '';
+            document.getElementById('profile-age').value = profile.age || '';
+            document.getElementById('profile-gender').value = profile.gender || '';
+            document.getElementById('profile-height').value = profile.height || '';
+            document.getElementById('profile-weight').value = profile.weight || '';
+            document.getElementById('profile-goal').value = profile.goal || '';
+            document.getElementById('profile-units').value = profile.unit_preference || '';
+        }
+
         // Profile Management
         async function saveProfile() {
             const data = {
@@ -1403,6 +2395,13 @@
         
         document.getElementById('signup-password').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSignup();
+        });
+        
+        // Close modal on outside click
+        document.getElementById('exercise-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'exercise-modal') {
+                closeExerciseModal();
+            }
         });
     </script>
 </body>
