@@ -1274,6 +1274,9 @@
         let addedExercises = []; // Exercises added to workout
         let currentFilter = 'all';
         let existingWorkoutDate = null;
+        let weightChart = null;
+        let volumeChart = null;
+        let categoryChart = null;
 
         // Theme Management
         function initTheme() {
@@ -1765,9 +1768,16 @@
         }
 
         function closeExerciseModal() {
-            document.getElementById('exercise-modal').classList.remove('active');
-            document.getElementById('custom-exercise-form').classList.remove('active');
+            const modal = document.getElementById('exercise-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+            const customForm = document.getElementById('custom-exercise-form');
+            if (customForm) {
+                customForm.classList.remove('active');
+            }
             selectedExercises = [];
+            renderExerciseList();
         }
 
         function filterByCategory(category) {
@@ -1800,14 +1810,15 @@
             });
 
             const html = filtered.map(ex => {
-                const isSelected = selectedExercises.includes(ex.id);
+                const isSelected = selectedExercises.includes(String(ex.id));
                 const icon = getCategoryIcon(ex.category);
 
                 return `
                     <div class="exercise-list-item ${isSelected ? 'selected' : ''}" 
                          onclick="toggleExerciseSelection('${ex.id}')">
                         <input type="checkbox" class="exercise-checkbox" 
-                               ${isSelected ? 'checked' : ''} onclick="event.stopPropagation()">
+                               ${isSelected ? 'checked' : ''} 
+                               onclick="toggleExerciseSelection('${ex.id}'); event.stopPropagation();">
                         <div class="exercise-icon">${icon}</div>
                         <div class="exercise-info">
                             <div class="exercise-info-name">
@@ -1826,11 +1837,12 @@
         }
 
         function toggleExerciseSelection(exerciseId) {
-            const index = selectedExercises.indexOf(exerciseId);
+            const idStr = String(exerciseId);
+            const index = selectedExercises.indexOf(idStr);
             if (index > -1) {
                 selectedExercises.splice(index, 1);
             } else {
-                selectedExercises.push(exerciseId);
+                selectedExercises.push(idStr);
             }
             renderExerciseList();
             updateSelectedCount();
@@ -1843,20 +1855,39 @@
         }
 
         function addSelectedExercises() {
-            selectedExercises.forEach(exerciseId => {
-                const exercise = allExercisesData.find(ex => ex.id === exerciseId);
-                if (exercise && !addedExercises.find(e => e.id === exerciseId)) {
-                    addedExercises.push({
-                        id: exercise.id,
-                        name: exercise.name,
-                        category: exercise.category,
-                        equipment: exercise.equipment,
-                        is_custom: exercise.is_custom,
-                        sets: [{set_number: 1, reps: null, weight: null, duration: null, notes: ''}]
-                    });
+            // Iterate selectedExercises (IDs) and add non-duplicates to addedExercises
+            selectedExercises.forEach(selId => {
+                const exercise = allExercisesData.find(ex => String(ex.id) === String(selId));
+                if (!exercise) return;
+            
+                // Prevent duplicates by ID (exact match)
+                const already = addedExercises.find(e => e.id === exercise.id);
+                if (already) return;
+            
+                // Compute API-compatible ID (strip "custom_" if present)
+                let apiId = exercise.id;
+                if (typeof apiId === 'string' && apiId.startsWith('custom_')) {
+                    const num = parseInt(apiId.split('_')[1]);
+                    apiId = Number.isNaN(num) ? exercise.id : num;
                 }
+            
+                // Add exercise to state with one default empty set
+                addedExercises.push({
+                    id: exercise.id,           // keep original id for UI/internal
+                    api_id: apiId,             // integer or original id usable for the API
+                    name: exercise.name,
+                    category: exercise.category,
+                    equipment: exercise.equipment,
+                    is_custom: !!exercise.is_custom,
+                    // exercise-level notes (optional); sets hold set-level notes
+                    exercise_notes: '',
+                    sets: [
+                        { set_number: 1, reps: null, weight: null, duration: null, notes: '' }
+                    ]
+                });
             });
-
+        
+            // Re-render and close modal
             renderAddedExercises();
             closeExerciseModal();
         }
@@ -2155,59 +2186,88 @@
 
         async function saveWorkout() {
             const date = document.getElementById('workout-date').value;
-            const notes = document.getElementById('workout-notes').value;
+            const globalNotes = document.getElementById('workout-notes').value;
             const isRestDay = document.getElementById('rest-day-toggle').checked;
 
             if (!date) {
                 alert('Please select a date');
                 return;
             }
-
+        
             if (isRestDay) {
-                // Save rest day
+                // Save rest day (no exercises)
                 const result = await apiCall('/workouts', 'POST', {
                     date,
-                    notes,
+                    notes: globalNotes || '',
                     is_rest_day: true,
-                    exercises: []
+                    exercises: [],
+                    existing_workout_date: existingWorkoutDate || null
                 });
-
+            
                 if (result && result.success) {
                     showSuccess(result.merged ? 'Rest day updated!' : 'Rest day saved!');
                     resetWorkoutForm();
                     await loadDashboard();
+                } else {
+                    alert(result?.error || 'Failed to save rest day');
                 }
                 return;
             }
-
-            if (addedExercises.length === 0) {
+        
+            if (!addedExercises || addedExercises.length === 0) {
                 alert('Please add at least one exercise');
                 return;
             }
-
-            // Prepare exercises data
-            const exercises = addedExercises.map(ex => ({
-                exercise_id: ex.id,
-                notes: '',
-                sets: ex.sets.filter(set => 
-                    set.reps !== null || set.weight !== null || set.duration !== null
-                )
-            }));
-
-            const result = await apiCall('/workouts', 'POST', {
+        
+            // Build exercises payload from addedExercises state
+            const exercises = addedExercises.map(ex => {
+                // Prefer stored api_id, otherwise derive from ex.id
+                let exerciseIdToSend = ex.api_id !== undefined ? ex.api_id : ex.id;
+                if (typeof exerciseIdToSend === 'string' && exerciseIdToSend.startsWith('custom_')) {
+                    const num = parseInt(exerciseIdToSend.split('_')[1]);
+                    exerciseIdToSend = Number.isNaN(num) ? exerciseIdToSend : num;
+                }
+            
+                // Filter out empty sets (no reps/weight/duration)
+                const sets = (ex.sets || []).map(s => ({
+                    set_number: s.set_number,
+                    reps: s.reps !== null && s.reps !== '' ? Number(s.reps) : null,
+                    weight: s.weight !== null && s.weight !== '' ? Number(s.weight) : null,
+                    duration: s.duration !== null && s.duration !== '' ? Number(s.duration) : null,
+                    notes: s.notes || ''
+                })).filter(s => s.reps !== null || s.weight !== null || s.duration !== null || (s.notes && s.notes.trim() !== ''));
+            
+                return {
+                    exercise_id: exerciseIdToSend,
+                    // exercise-level notes field preserved if present (optional)
+                    notes: ex.exercise_notes || '',
+                    sets
+                };
+            }).filter(e => e.sets && e.sets.length > 0); // ensure we only send exercises that have at least one non-empty set
+        
+            if (exercises.length === 0) {
+                alert('Please enter at least one set with reps/weight/duration or notes for your exercises.');
+                return;
+            }
+        
+            // include existing_workout_date if merging
+            const payload = {
                 date,
-                notes,
+                notes: globalNotes || '',
                 is_rest_day: false,
-                exercises
-            });
-
+                exercises,
+                existing_workout_date: existingWorkoutDate || null
+            };
+        
+            const result = await apiCall('/workouts', 'POST', payload);
+        
             if (result && result.success) {
-                const message = result.merged ? 
-                    'Exercises added to existing workout!' : 
-                    'Workout saved successfully!';
+                const message = result.merged ? 'Exercises added to existing workout!' : 'Workout saved successfully!';
                 showSuccess(message);
                 resetWorkoutForm();
                 await loadDashboard();
+            } else {
+                alert(result?.error || 'Failed to save workout');
             }
         }
 
@@ -2225,15 +2285,20 @@
         async function loadProgress() {
             const weightLogs = await apiCall('/weight');
             const progressData = await apiCall('/progress');
-            
+        
             if (!weightLogs || !progressData) return;
-            
+        
+            // Destroy previous charts if they exist
+            try { if (weightChart) { weightChart.destroy(); weightChart = null; } } catch (e) { console.warn(e); }
+            try { if (volumeChart) { volumeChart.destroy(); volumeChart = null; } } catch (e) { console.warn(e); }
+            try { if (categoryChart) { categoryChart.destroy(); categoryChart = null; } } catch (e) { console.warn(e); }
+        
             // Weight Chart
             const weightCtx = document.getElementById('weight-chart').getContext('2d');
-            new Chart(weightCtx, {
+            weightChart = new Chart(weightCtx, {
                 type: 'line',
                 data: {
-                    labels: weightLogs.reverse().map(w => new Date(w.date).toLocaleDateString()),
+                    labels: weightLogs.slice().reverse().map(w => new Date(w.date).toLocaleDateString()),
                     datasets: [{
                         label: 'Body Weight (kg)',
                         data: weightLogs.map(w => w.weight),
@@ -2246,26 +2311,20 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {display: true}
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
+                    plugins: { legend: { display: true } },
+                    scales: { y: { beginAtZero: false } }
                 }
             });
-            
+        
             // Volume Chart
             const volumeData = progressData.workout_stats.reduce((acc, stat) => {
                 if (!acc[stat.date]) acc[stat.date] = 0;
                 acc[stat.date] += stat.volume || 0;
                 return acc;
             }, {});
-            
+        
             const volumeCtx = document.getElementById('volume-chart').getContext('2d');
-            new Chart(volumeCtx, {
+            volumeChart = new Chart(volumeCtx, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(volumeData).map(d => new Date(d).toLocaleDateString()),
@@ -2278,22 +2337,20 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {display: true}
-                    }
+                    plugins: { legend: { display: true } }
                 }
             });
-            
+        
             // Category Frequency Chart
             const categoryCtx = document.getElementById('category-chart').getContext('2d');
-            new Chart(categoryCtx, {
+            categoryChart = new Chart(categoryCtx, {
                 type: 'doughnut',
                 data: {
                     labels: progressData.category_frequency.map(c => c.category),
                     datasets: [{
                         data: progressData.category_frequency.map(c => c.frequency),
                         backgroundColor: [
-                            '#6366f1', '#10b981', '#f59e0b', '#ef4444', 
+                            '#6366f1', '#10b981', '#f59e0b', '#ef4444',
                             '#8b5cf6', '#ec4899', '#06b6d4'
                         ]
                     }]
@@ -2301,11 +2358,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
@@ -2340,6 +2393,37 @@
             alert('Profile updated successfully!');
         }
 
+        // Helper: updates the visible unit labels next to inputs (no HTML changes required)
+        function updateProfileUnitLabels() {
+            // Find label nodes relative to inputs
+            const heightInput = document.getElementById('profile-height');
+            const weightInput = document.getElementById('profile-weight');
+        
+            const heightLabel = heightInput && heightInput.parentElement.querySelector('label');
+            const weightLabel = weightInput && weightInput.parentElement.querySelector('label');
+        
+            const unit = (document.getElementById('profile-units')?.value || 'kg').toLowerCase();
+        
+            if (heightLabel) {
+                if (unit === 'lb') {
+                    heightLabel.textContent = 'Height (in)';
+                } else {
+                    heightLabel.textContent = 'Height (cm)';
+                }
+            }
+        
+            if (weightLabel) {
+                if (unit === 'lb') {
+                    weightLabel.textContent = 'Current Weight (lb)';
+                } else {
+                    weightLabel.textContent = 'Current Weight (kg)';
+                }
+            }
+        }
+
+        // Attach listener so changes update labels immediately
+        document.getElementById('profile-units')?.addEventListener('change', updateProfileUnitLabels);
+
         async function logWeight() {
             const date = document.getElementById('weight-date').value;
             const weight = parseFloat(document.getElementById('weight-value').value);
@@ -2356,28 +2440,47 @@
 
         // Templates
         async function saveAsTemplate() {
-            const exercises = [];
-            for (let i = 1; i <= exerciseCounter; i++) {
-                const exerciseId = document.getElementById(`exercise-${i}`)?.value;
-                if (exerciseId) {
-                    exercises.push({
-                        exercise_id: parseInt(exerciseId),
-                        sets: parseInt(document.getElementById(`sets-${i}`).value) || 0,
-                        reps: parseInt(document.getElementById(`reps-${i}`).value) || 0,
-                        weight: parseFloat(document.getElementById(`weight-${i}`).value) || 0
-                    });
-                }
-            }
-            
-            if (exercises.length === 0) {
-                alert('Please add at least one exercise');
+            if (!addedExercises || addedExercises.length === 0) {
+                alert('Please add at least one exercise to save as a template');
                 return;
             }
-            
+        
             const name = prompt('Enter template name:');
-            if (name) {
-                await apiCall('/templates', 'POST', {name, exercises});
+            if (!name || !name.trim()) return;
+        
+            // Build template exercises payload from addedExercises
+            const exercisesForTemplate = addedExercises.map(ex => {
+                let exerciseIdToSend = ex.api_id !== undefined ? ex.api_id : ex.id;
+                if (typeof exerciseIdToSend === 'string' && exerciseIdToSend.startsWith('custom_')) {
+                    const num = parseInt(exerciseIdToSend.split('_')[1]);
+                    exerciseIdToSend = Number.isNaN(num) ? exerciseIdToSend : num;
+                }
+            
+                // Template usually stores set structure (reps/weight/duration), keep as-is but convert to numbers/null
+                const sets = (ex.sets || []).map(s => ({
+                    set_number: s.set_number,
+                    reps: s.reps !== null && s.reps !== '' ? Number(s.reps) : null,
+                    weight: s.weight !== null && s.weight !== '' ? Number(s.weight) : null,
+                    duration: s.duration !== null && s.duration !== '' ? Number(s.duration) : null
+                }));
+            
+                return {
+                    exercise_id: exerciseIdToSend,
+                    name: ex.name,
+                    category: ex.category,
+                    sets
+                };
+            });
+        
+            const result = await apiCall('/templates', 'POST', {
+                name: name.trim(),
+                exercises: exercisesForTemplate
+            });
+        
+            if (result && result.success) {
                 alert('Template saved successfully!');
+            } else {
+                alert(result?.error || 'Failed to save template');
             }
         }
 
